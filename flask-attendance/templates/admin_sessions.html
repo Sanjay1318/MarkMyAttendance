@@ -1,0 +1,72 @@
+{% extends "admin_layout.html" %}
+{% from "macros.html" import alert, page_header %}
+{% block title %}Sessions & Terms{% endblock %}
+{% block content %}
+{{ page_header('Sessions & Terms','', [('Dashboard', url_for('admin_dashboard')), ('Sessions','#')]) }}
+{{ alert(msg) }}
+<div class="row">
+  <div class="col-lg-4 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-{% if edit_row %}edit{% else %}plus{% endif %} mr-2"></i>{% if edit_row %}Edit{% else %}Add{% endif %} Session</h6></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="{% if edit_row %}update{% else %}save{% endif %}">
+          {% if edit_row %}<input type="hidden" name="Id" value="{{ edit_row.Id }}">{% endif %}
+          <div class="form-group">
+            <label class="font-weight-bold small">Session Name <span class="text-danger">*</span></label>
+            <input type="text" name="sessionName" class="form-control" value="{{ edit_row.sessionName if edit_row else '' }}" placeholder="e.g. 2024/2025" required>
+          </div>
+          <div class="form-group">
+            <label class="font-weight-bold small">Term <span class="text-danger">*</span></label>
+            <select name="termId" class="form-control" required>
+              <option value="">Select Term</option>
+              {% for t in terms %}<option value="{{ t.Id }}" {% if edit_row and edit_row.termId==t.Id|string %}selected{% endif %}>{{ t.termName }} Term</option>{% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-save mr-1"></i>{% if edit_row %}Update{% else %}Save{% endif %}</button>
+          {% if edit_row %}<a href="{{ url_for('admin_sessions') }}" class="btn btn-secondary btn-block mt-2">Cancel</a>{% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list mr-2"></i>All Sessions</h6></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover" id="dt">
+            <thead><tr><th>#</th><th>Session</th><th>Term</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for s, t in sessions %}
+              <tr><td>{{ loop.index }}</td><td class="font-weight-bold">{{ s.sessionName }}</td><td>{{ t.termName }} Term</td>
+              <td>{% if s.isActive=='1' %}<span class="badge badge-success"><i class="fas fa-check mr-1"></i>Active</span>{% else %}<span class="badge badge-secondary">Inactive</span>{% endif %}</td>
+              <td>
+                {% if s.isActive!='1' %}
+                <form method="post" class="d-inline" onsubmit="return confirm('Set as active?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="activate">
+                  <input type="hidden" name="Id" value="{{ s.Id }}">
+                  <button type="submit" class="btn btn-success btn-sm mr-1"><i class="fas fa-power-off mr-1"></i>Activate</button>
+                </form>
+                {% endif %}
+                <a href="{{ url_for('admin_sessions', action='edit', Id=s.Id) }}" class="btn btn-warning btn-sm mr-1"><i class="fas fa-edit"></i></a>
+                <form method="post" class="d-inline" onsubmit="return confirm('Delete?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="Id" value="{{ s.Id }}">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                </form>
+              </td></tr>
+              {% else %}<tr><td colspan="5" class="text-center text-muted">No sessions found.</td></tr>{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>$('#dt').DataTable({pageLength:15});</script>
+{% endblock %}

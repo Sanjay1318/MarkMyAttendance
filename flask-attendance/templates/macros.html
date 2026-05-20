@@ -1,0 +1,65 @@
+{% macro alert(msg) %}{% if msg %}
+<div class="alert alert-{{ msg[0] }} alert-dismissible fade show shadow-sm" role="alert">
+  <i class="fas fa-{% if msg[0]=='success' %}check-circle{% elif msg[0]=='danger' %}exclamation-circle{% elif msg[0]=='warning' %}exclamation-triangle{% else %}info-circle{% endif %} mr-2"></i>{{ msg[1] }}
+  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+</div>{% endif %}{% endmacro %}
+
+{% macro stat_card(label, value, icon, color) %}
+<div class="col-xl-3 col-md-6 mb-4">
+  <div class="card h-100 border-left-{{ color }} shadow stat-card">
+    <div class="card-body py-3">
+      <div class="row no-gutters align-items-center">
+        <div class="col mr-2">
+          <div class="text-xs font-weight-bold text-{{ color }} text-uppercase mb-1">{{ label }}</div>
+          <div class="h3 mb-0 font-weight-bold text-gray-800">{{ value }}</div>
+        </div>
+        <div class="col-auto"><i class="fas {{ icon }} fa-2x text-{{ color }} opacity-25"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro breadcrumb(items) %}
+<ol class="breadcrumb mb-0 bg-transparent p-0">
+  {% for label, url in items[:-1] %}<li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>{% endfor %}
+  <li class="breadcrumb-item active">{{ items[-1][0] }}</li>
+</ol>
+{% endmacro %}
+
+{% macro page_header(title, sub='', bc=[]) %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">{{ title }}</h1>
+    {% if sub %}<p class="text-muted small mb-0">{{ sub }}</p>{% endif %}
+  </div>
+  {% if bc %}{{ breadcrumb(bc) }}{% endif %}
+</div>
+{% endmacro %}
+
+{% macro change_password_form(action_url, role_color='primary') %}
+<div class="card shadow">
+  <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-{{ role_color }}"><i class="fas fa-key mr-2"></i>Change Password</h6></div>
+  <div class="card-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="font-weight-bold small">Current Password</label>
+        <div class="input-group"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-lock"></i></span></div>
+        <input type="password" name="current_password" class="form-control" required></div>
+      </div>
+      <div class="form-group">
+        <label class="font-weight-bold small">New Password <small class="text-muted">(min 6 chars)</small></label>
+        <div class="input-group"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-lock"></i></span></div>
+        <input type="password" name="new_password" class="form-control" minlength="6" required></div>
+      </div>
+      <div class="form-group">
+        <label class="font-weight-bold small">Confirm New Password</label>
+        <div class="input-group"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-lock"></i></span></div>
+        <input type="password" name="confirm_password" class="form-control" required></div>
+      </div>
+      <button type="submit" class="btn btn-{{ role_color }} btn-block"><i class="fas fa-save mr-1"></i>Update Password</button>
+    </form>
+  </div>
+</div>
+{% endmacro %}

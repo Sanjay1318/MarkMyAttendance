@@ -1,0 +1,57 @@
+{% extends "admin_layout.html" %}
+{% from "macros.html" import alert, page_header %}
+{% block title %}Classes{% endblock %}
+{% block content %}
+{{ page_header('Manage Classes','', [('Dashboard', url_for('admin_dashboard')), ('Classes','#')]) }}
+{{ alert(msg) }}
+<div class="row">
+  <div class="col-lg-4 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-{% if edit_row %}edit{% else %}plus{% endif %} mr-2"></i>{% if edit_row %}Edit{% else %}Add{% endif %} Class</h6></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="{% if edit_row %}update{% else %}save{% endif %}">
+          {% if edit_row %}<input type="hidden" name="Id" value="{{ edit_row.Id }}">{% endif %}
+          <div class="form-group">
+            <label class="font-weight-bold small">Class Name <span class="text-danger">*</span></label>
+            <input type="text" name="className" class="form-control" value="{{ edit_row.className if edit_row else '' }}" placeholder="e.g. Seven" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-save mr-1"></i>{% if edit_row %}Update{% else %}Save{% endif %}</button>
+          {% if edit_row %}<a href="{{ url_for('admin_classes') }}" class="btn btn-secondary btn-block mt-2">Cancel</a>{% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list mr-2"></i>All Classes ({{ classes|length }})</h6></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover" id="dt">
+            <thead><tr><th>#</th><th>Class Name</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for c in classes %}
+              <tr><td>{{ loop.index }}</td><td class="font-weight-bold">{{ c.className }}</td>
+              <td>
+                <a href="{{ url_for('admin_classes', action='edit', Id=c.Id) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit mr-1"></i>Edit</a>
+                <form method="post" class="d-inline" onsubmit="return confirm('Delete class {{ c.className }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="Id" value="{{ c.Id }}">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash mr-1"></i>Delete</button>
+                </form>
+              </td></tr>
+              {% else %}<tr><td colspan="3" class="text-center text-muted">No classes found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>$('#dt').DataTable({pageLength:15});</script>
+{% endblock %}

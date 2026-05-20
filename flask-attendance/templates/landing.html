@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block body %}
+<div class="landing-bg">
+  <div class="text-center mb-2">
+    <i class="fas fa-graduation-cap fa-4x text-white mb-3"></i>
+    <h1 class="landing-title">AttendMS</h1>
+    <p class="landing-sub">Student Attendance Management System</p>
+  </div>
+  <div class="row justify-content-center" style="max-width:860px;width:100%;">
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('admin_login') }}" class="text-decoration-none">
+        <div class="card role-card role-card-admin">
+          <div class="card-body">
+            <div class="role-icon"><i class="fas fa-shield-alt"></i></div>
+            <h4 class="font-weight-bold mb-1">Admin</h4>
+            <p class="mb-0 small opacity-75">Manage the entire system</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('teacher_login') }}" class="text-decoration-none">
+        <div class="card role-card role-card-teacher">
+          <div class="card-body">
+            <div class="role-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <h4 class="font-weight-bold mb-1">Teacher</h4>
+            <p class="mb-0 small opacity-75">Take & manage attendance</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4 mb-3">
+      <a href="{{ url_for('student_login') }}" class="text-decoration-none">
+        <div class="card role-card role-card-student">
+          <div class="card-body">
+            <div class="role-icon"><i class="fas fa-user-graduate"></i></div>
+            <h4 class="font-weight-bold mb-1">Student</h4>
+            <p class="mb-0 small opacity-75">View your attendance</p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+  <p class="text-center mt-4" style="color:rgba(255,255,255,.4);font-size:.8rem;">
+    &copy; {{ today[:4] }} Student Attendance Management System — Built with Flask
+  </p>
+</div>
+{% endblock %}

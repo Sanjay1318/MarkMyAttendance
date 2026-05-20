@@ -1,0 +1,196 @@
+{% extends "student_layout.html" %}
+{% from "macros.html" import page_header %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+{{ page_header('My Dashboard', 'Welcome back, ' ~ student.firstName ~ '!', [('Dashboard','#')]) }}
+
+<!-- Today Status Banner -->
+<div class="mb-4">
+  {% if today_rec %}
+    {% if today_rec.status == '1' %}
+    <div class="status-banner status-present">
+      <i class="fas fa-check-circle mr-2"></i>You were marked <strong>Present</strong> today ({{ today }})
+    </div>
+    {% else %}
+    <div class="status-banner status-absent">
+      <i class="fas fa-times-circle mr-2"></i>You were marked <strong>Absent</strong> today ({{ today }})
+    </div>
+    {% endif %}
+  {% else %}
+  <div class="status-banner status-unknown">
+    <i class="fas fa-hourglass-half mr-2"></i>Attendance for today ({{ today }}) has not been taken yet.
+  </div>
+  {% endif %}
+</div>
+
+<!-- Stats Row -->
+<div class="row">
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card h-100 border-left-student stat-card">
+      <div class="card-body py-3">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color:#6f42c1;">Total Days</div>
+            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ total }}</div>
+          </div>
+          <div class="col-auto"><i class="fas fa-calendar-alt fa-2x opacity-25" style="color:#6f42c1;"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card h-100 border-left-success stat-card">
+      <div class="card-body py-3">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Days Present</div>
+            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ present }}</div>
+          </div>
+          <div class="col-auto"><i class="fas fa-check-circle fa-2x text-success opacity-25"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card h-100 border-left-danger stat-card">
+      <div class="card-body py-3">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Days Absent</div>
+            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ absent }}</div>
+          </div>
+          <div class="col-auto"><i class="fas fa-times-circle fa-2x text-danger opacity-25"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card h-100 border-left-warning stat-card">
+      <div class="card-body py-3">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Class Rank</div>
+            <div class="h3 mb-0 font-weight-bold text-gray-800">
+              {% if my_rank %}{{ my_rank }}<small class="text-muted" style="font-size:.9rem;"> / {{ class_size }}</small>{% else %}—{% endif %}
+            </div>
+          </div>
+          <div class="col-auto"><i class="fas fa-trophy fa-2x text-warning opacity-25"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance Ring + Weekly Chart -->
+<div class="row mb-4">
+  <div class="col-xl-4 mb-4">
+    <div class="card shadow h-100">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold" style="color:#6f42c1;"><i class="fas fa-chart-pie mr-2"></i>Overall Attendance</h6></div>
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
+        {% if total > 0 %}
+        <canvas id="attPie" width="200" height="200"></canvas>
+        <div class="mt-3 text-center">
+          <span class="badge badge-pill att-badge-present mr-2 p-2"><i class="fas fa-check mr-1"></i>Present {{ present }}</span>
+          <span class="badge badge-pill att-badge-absent p-2"><i class="fas fa-times mr-1"></i>Absent {{ absent }}</span>
+        </div>
+        <div class="mt-2">
+          <span class="h4 font-weight-bold {% if pct >= 75 %}text-success{% elif pct >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ pct }}%</span>
+          <small class="text-muted ml-1">attendance rate</small>
+        </div>
+        {% if pct < 75 %}
+        <div class="alert alert-warning py-2 mt-2 small w-100 text-center">
+          <i class="fas fa-exclamation-triangle mr-1"></i>Below 75% threshold
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <i class="fas fa-calendar-times fa-3x mb-3 opacity-25"></i>
+          <p>No records yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8 mb-4">
+    <div class="card shadow h-100">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold" style="color:#6f42c1;"><i class="fas fa-chart-bar mr-2"></i>Last 7 Days</h6></div>
+      <div class="card-body"><canvas id="weeklyChart" height="95"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Attendance -->
+<div class="row">
+  <div class="col-lg-6 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold" style="color:#6f42c1;"><i class="fas fa-history mr-2"></i>Recent Attendance</h6>
+        <a href="{{ url_for('student_my_attendance') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent %}
+        <ul class="list-group list-group-flush">
+          {% for r in recent %}
+          <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
+            <span class="text-gray-800 font-weight-bold">{{ r.dateTimeTaken }}</span>
+            {% if r.status == '1' %}
+            <span class="badge badge-pill att-badge-present"><i class="fas fa-check mr-1"></i>Present</span>
+            {% else %}
+            <span class="badge badge-pill att-badge-absent"><i class="fas fa-times mr-1"></i>Absent</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-4 text-center text-muted">No attendance records yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold" style="color:#6f42c1;"><i class="fas fa-info-circle mr-2"></i>My Info</h6></div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><th class="text-muted small" style="width:40%;">Full Name</th><td class="font-weight-bold">{{ student.firstName }} {{ student.lastName }}{% if student.otherName %} {{ student.otherName }}{% endif %}</td></tr>
+          <tr><th class="text-muted small">Admission No.</th><td><span class="badge badge-info">{{ student.admissionNumber }}</span></td></tr>
+          <tr><th class="text-muted small">Class</th><td>{{ cls.className if cls else '—' }} — {{ arm.classArmName if arm else '—' }}</td></tr>
+          <tr><th class="text-muted small">Session</th><td>{{ active_session_global.sessionName if active_session_global else '—' }}</td></tr>
+          <tr><th class="text-muted small">Enrolled</th><td>{{ student.dateCreated }}</td></tr>
+        </table>
+        <a href="{{ url_for('student_export_csv') }}" class="btn btn-sm mt-3" style="background:#6f42c1;color:#fff;"><i class="fas fa-file-csv mr-1"></i>Export My Attendance</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}{{ super() }}
+<script>
+{% if total > 0 %}
+new Chart(document.getElementById('attPie'),{
+  type:'doughnut',
+  data:{labels:['Present','Absent'],datasets:[{data:[{{ present }},{{ absent }}],backgroundColor:['#1cc88a','#e74a3b'],hoverOffset:6}]},
+  options:{responsive:true,plugins:{legend:{position:'bottom'}},cutout:'65%'}
+});
+{% endif %}
+const wLabels = {{ weekly_labels | tojson }};
+const wStatus = {{ weekly_status | tojson }};
+new Chart(document.getElementById('weeklyChart'),{
+  type:'bar',
+  data:{
+    labels:wLabels,
+    datasets:[{
+      label:'Present (1) / Absent (0)',
+      data:wStatus,
+      backgroundColor: wStatus.map(v => v===1 ? 'rgba(28,200,138,0.75)' : 'rgba(231,74,59,0.55)'),
+      borderColor: wStatus.map(v => v===1 ? '#1cc88a' : '#e74a3b'),
+      borderWidth:1
+    }]
+  },
+  options:{responsive:true,scales:{y:{min:0,max:1,ticks:{stepSize:1,callback:v=>v===1?'Present':'Absent'}}},plugins:{legend:{display:false}}}
+});
+</script>
+{% endblock %}

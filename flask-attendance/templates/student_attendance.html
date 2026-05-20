@@ -1,0 +1,48 @@
+{% extends "teacher_layout.html" %}
+{% from "macros.html" import page_header %}
+{% block title %}Student Attendance{% endblock %}
+{% block content %}
+{{ page_header(student.firstName ~ ' ' ~ student.lastName, student.admissionNumber,
+  [('Dashboard', url_for('teacher_dashboard')), ('Students', url_for('view_students')), ('Attendance','#')]) }}
+<div class="row mb-4">
+  <div class="col-md-3"><div class="card border-left-info shadow h-100 py-2"><div class="card-body text-center"><div class="text-xs font-weight-bold text-info text-uppercase">Total Days</div><div class="h3 font-weight-bold text-gray-800 mt-1">{{ total }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-left-success shadow h-100 py-2"><div class="card-body text-center"><div class="text-xs font-weight-bold text-success text-uppercase">Present</div><div class="h3 font-weight-bold text-gray-800 mt-1">{{ present }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-left-danger shadow h-100 py-2"><div class="card-body text-center"><div class="text-xs font-weight-bold text-danger text-uppercase">Absent</div><div class="h3 font-weight-bold text-gray-800 mt-1">{{ absent }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-left-warning shadow h-100 py-2"><div class="card-body text-center"><div class="text-xs font-weight-bold text-warning text-uppercase">Rate</div><div class="h3 font-weight-bold {% if pct>=75 %}text-success{% elif pct>=50 %}text-warning{% else %}text-danger{% endif %} mt-1">{{ pct }}%</div></div></div></div>
+</div>
+{% if total > 0 %}
+<div class="card shadow mb-4">
+  <div class="card-body py-3">
+    <div class="d-flex justify-content-between mb-1"><span class="font-weight-bold small">Attendance Rate</span><span class="font-weight-bold small {% if pct>=75 %}text-success{% elif pct>=50 %}text-warning{% else %}text-danger{% endif %}">{{ pct }}%</span></div>
+    <div class="progress" style="height:12px;"><div class="progress-bar {% if pct>=75 %}bg-success{% elif pct>=50 %}bg-warning{% else %}bg-danger{% endif %} progress-bar-striped" style="width:{{ pct }}%"></div></div>
+    {% if pct < 75 %}<small class="text-danger mt-1 d-block"><i class="fas fa-exclamation-triangle mr-1"></i>Below 75% attendance threshold.</small>{% endif %}
+  </div>
+</div>
+{% endif %}
+<div class="card shadow mb-4">
+  <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-success"><i class="fas fa-list mr-2"></i>All Records</h6></div>
+  <div class="card-body">
+    {% if records %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover" id="dt">
+        <thead class="table-teacher"><tr><th>#</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for r in records %}
+          <tr class="{{ 'table-success' if r.status=='1' else '' }}">
+            <td>{{ loop.index }}</td><td class="font-weight-bold">{{ r.dateTimeTaken }}</td>
+            <td>{% if r.status=='1' %}<span class="badge badge-success badge-pill">Present</span>{% else %}<span class="badge badge-danger badge-pill">Absent</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">No records found.</div>
+    {% endif %}
+  </div>
+</div>
+<a href="{{ url_for('view_students') }}" class="btn btn-secondary"><i class="fas fa-arrow-left mr-1"></i>Back to Students</a>
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>$('#dt').DataTable({order:[[1,'desc']],pageLength:25});</script>
+{% endblock %}

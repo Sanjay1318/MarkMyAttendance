@@ -1,0 +1,80 @@
+{% extends "admin_layout.html" %}
+{% from "macros.html" import page_header %}
+{% block title %}Attendance Report{% endblock %}
+{% block content %}
+{{ page_header('Attendance Report','', [('Dashboard', url_for('admin_dashboard')), ('Report','#')]) }}
+<div class="card shadow mb-4">
+  <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter mr-2"></i>Filter</h6></div>
+  <div class="card-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row align-items-end">
+        <div class="form-group col-md-3"><label class="font-weight-bold small">From Date*</label><input type="date" name="date_from" class="form-control" value="{{ filters.get('date_from','') }}" required></div>
+        <div class="form-group col-md-3"><label class="font-weight-bold small">To Date*</label><input type="date" name="date_to" class="form-control" value="{{ filters.get('date_to','') }}" required></div>
+        <div class="form-group col-md-2"><label class="font-weight-bold small">Class</label>
+          <select name="classId" id="classSelect" class="form-control">
+            <option value="">All Classes</option>
+            {% for c in classes %}<option value="{{ c.Id }}" {% if filters.get('classId')==c.Id|string %}selected{% endif %}>{{ c.className }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-2"><label class="font-weight-bold small">Arm</label>
+          <select name="classArmId" id="armSelect" class="form-control">
+            <option value="">All Arms</option>
+            {% for a in arms %}<option value="{{ a.Id }}" {% if filters.get('classArmId')==a.Id|string %}selected{% endif %}>{{ a.classArmName }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-search mr-1"></i>Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% if records %}
+<div class="card shadow mb-4">
+  <div class="card-header py-3 d-flex align-items-center justify-content-between">
+    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-table mr-2"></i>Results ({{ records|length }} records)</h6>
+    <a href="{{ url_for('export_attendance_csv', **filters) }}" class="btn btn-success btn-sm"><i class="fas fa-download mr-1"></i>Export CSV</a>
+  </div>
+  <div class="card-body">
+    {% set present_count = records|selectattr('1')|selectattr('1.status','equalto','1')|list|length %}
+    <div class="row mb-3">
+      <div class="col-md-4"><div class="card border-left-success shadow-sm py-2 text-center"><div class="card-body py-1"><div class="text-xs font-weight-bold text-success text-uppercase">Present</div><div class="h4 font-weight-bold text-gray-800">{{ present_count }}</div></div></div></div>
+      <div class="col-md-4"><div class="card border-left-danger shadow-sm py-2 text-center"><div class="card-body py-1"><div class="text-xs font-weight-bold text-danger text-uppercase">Absent</div><div class="h4 font-weight-bold text-gray-800">{{ records|length - present_count }}</div></div></div></div>
+      <div class="col-md-4"><div class="card border-left-info shadow-sm py-2 text-center"><div class="card-body py-1"><div class="text-xs font-weight-bold text-info text-uppercase">Total</div><div class="h4 font-weight-bold text-gray-800">{{ records|length }}</div></div></div></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover" id="dt">
+        <thead><tr><th>#</th><th>Date</th><th>Adm. No</th><th>Name</th><th>Class</th><th>Arm</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for s, a in records %}
+          <tr><td>{{ loop.index }}</td><td>{{ a.dateTimeTaken }}</td>
+          <td><span class="badge badge-info">{{ s.admissionNumber }}</span></td>
+          <td class="font-weight-bold">{{ s.firstName }} {{ s.lastName }}</td>
+          <td>{{ class_map.get(a.classId,'—') }}</td><td>{{ arm_map.get(a.classArmId,'—') }}</td>
+          <td>{% if a.status=='1' %}<span class="badge badge-success badge-pill">Present</span>{% else %}<span class="badge badge-danger badge-pill">Absent</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% elif filters %}
+<div class="alert alert-warning shadow-sm"><i class="fas fa-search mr-2"></i>No records found for the selected filters.</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>
+$('#dt').DataTable({pageLength:25});
+$('#classSelect').change(function(){
+  var cid=$(this).val();
+  $('#armSelect').html('<option value="">All Arms</option>');
+  if(cid) $.getJSON('/ajax/class-arms/'+cid,function(data){
+    var o='<option value="">All Arms</option>';
+    data.forEach(function(a){o+='<option value="'+a.Id+'">'+a.classArmName+'</option>';});
+    $('#armSelect').html(o);
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "admin_layout.html" %}
+{% from "macros.html" import alert, page_header %}
+{% block title %}Teachers{% endblock %}
+{% block content %}
+{{ page_header('Manage Teachers','', [('Dashboard', url_for('admin_dashboard')), ('Teachers','#')]) }}
+{{ alert(msg) }}
+<div class="row">
+  <div class="col-lg-5 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-{% if edit_row %}edit{% else %}plus{% endif %} mr-2"></i>{% if edit_row %}Edit{% else %}Add{% endif %} Teacher</h6></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="{% if edit_row %}update{% else %}save{% endif %}">
+          {% if edit_row %}<input type="hidden" name="Id" value="{{ edit_row.Id }}">{% endif %}
+          <div class="form-row">
+            <div class="form-group col-6"><label class="font-weight-bold small">First Name*</label><input type="text" name="firstName" class="form-control" value="{{ edit_row.firstName if edit_row else '' }}" required></div>
+            <div class="form-group col-6"><label class="font-weight-bold small">Last Name*</label><input type="text" name="lastName" class="form-control" value="{{ edit_row.lastName if edit_row else '' }}" required></div>
+          </div>
+          <div class="form-group"><label class="font-weight-bold small">Email*</label><input type="email" name="emailAddress" class="form-control" value="{{ edit_row.emailAddress if edit_row else '' }}" required></div>
+          <div class="form-group"><label class="font-weight-bold small">Password {% if edit_row %}<small class="text-muted">(leave blank to keep)</small>{% else %}*{% endif %}</label><input type="password" name="password" class="form-control" {% if not edit_row %}required{% endif %}></div>
+          <div class="form-group"><label class="font-weight-bold small">Phone*</label><input type="text" name="phoneNo" class="form-control" value="{{ edit_row.phoneNo if edit_row else '' }}" required></div>
+          <div class="form-group"><label class="font-weight-bold small">Class*</label>
+            <select name="classId" id="classSelect" class="form-control" required>
+              <option value="">Select Class</option>
+              {% for c in classes %}<option value="{{ c.Id }}" {% if edit_row and edit_row.classId==c.Id|string %}selected{% endif %}>{{ c.className }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group"><label class="font-weight-bold small">Class Arm*</label>
+            <select name="classArmId" id="armSelect" class="form-control" required>
+              <option value="">Select Arm</option>
+              {% for a in arms %}<option value="{{ a.Id }}" {% if edit_row and edit_row.classArmId==a.Id|string %}selected{% endif %}>{{ a.classArmName }}</option>{% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-save mr-1"></i>{% if edit_row %}Update{% else %}Save{% endif %}</button>
+          {% if edit_row %}<a href="{{ url_for('admin_teachers') }}" class="btn btn-secondary btn-block mt-2">Cancel</a>{% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list mr-2"></i>All Teachers ({{ teachers|length }})</h6></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover" id="dt">
+            <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Class</th><th>Arm</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for t in teachers %}
+              <tr><td>{{ loop.index }}</td><td class="font-weight-bold">{{ t.firstName }} {{ t.lastName }}</td><td>{{ t.emailAddress }}</td>
+              <td>{{ class_map.get(t.classId,'—') }}</td><td>{{ arm_map.get(t.classArmId,'—') }}</td>
+              <td>
+                <a href="{{ url_for('admin_teachers', action='edit', Id=t.Id) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                <form method="post" class="d-inline" onsubmit="return confirm('Delete?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="Id" value="{{ t.Id }}">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                </form>
+              </td></tr>
+              {% else %}<tr><td colspan="6" class="text-center text-muted">No teachers.</td></tr>{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>
+$('#dt').DataTable({pageLength:15});
+$('#classSelect').change(function(){
+  var cid=$(this).val();
+  $('#armSelect').html('<option value="">Loading...</option>');
+  if(cid) $.getJSON('/ajax/free-arms/'+cid,function(data){
+    var o='<option value="">Select Arm</option>';
+    data.forEach(function(a){o+='<option value="'+a.Id+'">'+a.classArmName+'</option>';});
+    $('#armSelect').html(o);
+  });
+});
+</script>
+{% endblock %}

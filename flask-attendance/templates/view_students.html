@@ -1,0 +1,43 @@
+{% extends "teacher_layout.html" %}
+{% from "macros.html" import page_header %}
+{% block title %}My Students{% endblock %}
+{% block content %}
+{{ page_header('My Students', (cls.className if cls else '') ~ ' — ' ~ (arm.classArmName if arm else '') ~ ' (' ~ student_stats|length ~ ' students)',
+  [('Dashboard', url_for('teacher_dashboard')), ('Students','#')]) }}
+<div class="card shadow mb-4">
+  <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-success"><i class="fas fa-users mr-2"></i>Student List with Attendance</h6></div>
+  <div class="card-body">
+    {% if student_stats %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover" id="dt">
+        <thead class="table-teacher"><tr><th>#</th><th>Adm. No</th><th>Name</th><th>Total</th><th>Present</th><th>Absent</th><th>Rate</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for row in student_stats %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><span class="badge badge-info">{{ row.student.admissionNumber }}</span></td>
+            <td class="font-weight-bold">{{ row.student.firstName }} {{ row.student.lastName }}</td>
+            <td>{{ row.total }}</td>
+            <td class="text-success font-weight-bold">{{ row.present }}</td>
+            <td class="text-danger font-weight-bold">{{ row.absent }}</td>
+            <td>
+              <span class="badge badge-pill {% if row.pct>=75 %}badge-success{% elif row.pct>=50 %}badge-warning{% else %}badge-danger{% endif %}">{{ row.pct }}%</span>
+              <div class="progress mt-1" style="height:5px;min-width:60px;"><div class="progress-bar {% if row.pct>=75 %}bg-success{% elif row.pct>=50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ row.pct }}%"></div></div>
+            </td>
+            <td>
+              <a href="{{ url_for('student_attendance', admission_no=row.student.admissionNumber) }}" class="btn btn-info btn-sm"><i class="fas fa-chart-bar mr-1"></i>Detail</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5"><i class="fas fa-users fa-3x mb-3 opacity-25"></i><p>No students found.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>$('#dt').DataTable({pageLength:20});</script>
+{% endblock %}

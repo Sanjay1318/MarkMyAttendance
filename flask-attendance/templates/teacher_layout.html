@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block body %}
+<div id="wrapper">
+  <ul class="navbar-nav sidebar sidebar-dark sidebar-teacher accordion">
+    <a class="sidebar-brand" href="{{ url_for('teacher_dashboard') }}">
+      <div class="sidebar-brand-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div class="sidebar-brand-text">AttendMS</div>
+    </a>
+    <hr class="sidebar-divider my-0">
+    <li class="nav-item {% if request.endpoint=='teacher_dashboard' %}active{% endif %}">
+      <a class="nav-link" href="{{ url_for('teacher_dashboard') }}"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a>
+    </li>
+    <hr class="sidebar-divider"><div class="sidebar-heading">Attendance</div>
+    <li class="nav-item {% if request.endpoint=='take_attendance' %}active{% endif %}">
+      <a class="nav-link" href="{{ url_for('take_attendance') }}"><i class="fas fa-fw fa-clipboard-check"></i><span>Take Attendance</span></a>
+    </li>
+    <li class="nav-item {% if request.endpoint=='view_attendance' %}active{% endif %}">
+      <a class="nav-link" href="{{ url_for('view_attendance') }}"><i class="fas fa-fw fa-eye"></i><span>View Attendance</span></a>
+    </li>
+    <li class="nav-item {% if request.endpoint=='view_students' %}active{% endif %}">
+      <a class="nav-link" href="{{ url_for('view_students') }}"><i class="fas fa-fw fa-users"></i><span>My Students</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('teacher_export_csv') }}"><i class="fas fa-fw fa-file-csv"></i><span>Export CSV</span></a>
+    </li>
+    <hr class="sidebar-divider d-none d-md-block">
+    <li class="nav-item {% if request.endpoint=='teacher_change_password' %}active{% endif %}">
+      <a class="nav-link" href="{{ url_for('teacher_change_password') }}"><i class="fas fa-fw fa-key"></i><span>Change Password</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-fw fa-sign-out-alt"></i><span>Logout</span></a>
+    </li>
+  </ul>
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
+        <span class="navbar-text text-muted d-none d-md-inline small ml-2">
+          {% if active_session_global %}<i class="fas fa-circle blink-dot mr-1" style="color:var(--success);font-size:.45rem;vertical-align:middle;"></i>Active: <strong>{{ active_session_global.sessionName }}</strong>
+          {% else %}<i class="fas fa-circle text-warning mr-1" style="font-size:.45rem;vertical-align:middle;"></i>No active session{% endif %}
+        </span>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown no-arrow">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+              <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold">{{ session.userName }}</span>
+              <div class="avatar-circle avatar-teacher">{{ session.userName[0].upper() if session.userName else 'T' }}</div>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+              <h6 class="dropdown-header">Class Teacher</h6>
+              <a class="dropdown-item" href="{{ url_for('teacher_change_password') }}"><i class="fas fa-key fa-sm fa-fw mr-2 text-gray-400"></i>Change Password</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2"></i>Logout</a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+      <div class="container-fluid px-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show shadow-sm">
+          <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% elif cat=='warning' %}exclamation-triangle{% else %}info-circle{% endif %} mr-2"></i>
+          {{ msg }}<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>{% endfor %}{% endwith %}
+      </div>
+      <div class="container-fluid" id="container-wrapper">{% block content %}{% endblock %}</div>
+    </div>
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto text-center"><span class="copyright">Student Attendance Management System &copy; {{ today[:4] }}</span></div>
+    </footer>
+  </div>
+</div>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('sidebarToggleTop').addEventListener('click',function(){
+  document.body.classList.toggle('sidebar-toggled');
+  document.querySelector('.sidebar').classList.toggle('toggled');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+});
+function closeSidebar(){
+  document.body.classList.remove('sidebar-toggled');
+  document.querySelector('.sidebar').classList.remove('toggled');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+}
+</script>
+{% endblock %}
